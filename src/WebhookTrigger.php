@@ -241,26 +241,18 @@ class WebhookTrigger
             return;
         }
 
-        if (false === filter_var($webhook, FILTER_VALIDATE_URL)) {
-            return;
-        }
-
-        $args = apply_filters('jamstack_deployments_webhook_request_args', [
-            'blocking' => false
-        ]);
-
         $method = jamstack_deployments_get_webhook_method();
 
         do_action('jamstack_deployments_before_fire_webhook');
 
-        if ($method === 'get') {
-            $return = wp_safe_remote_get($webhook, $args);
-        } else {
-            $return = wp_safe_remote_post($webhook, $args);
-        }
+        $curl_handle=curl_init();
+        curl_setopt($curl_handle,CURLOPT_URL, $webhook);
+        curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
+        $buffer = curl_exec($curl_handle);
+        curl_close($curl_handle);
 
         do_action('jamstack_deployments_after_fire_webhook');
 
-        return $return;
+        return $buffer;
     }
 }
